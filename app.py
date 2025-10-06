@@ -14,7 +14,12 @@ import threading  # Added for async TTS
 app = Flask(__name__)
 
 # Text-to-Speech (optional) with threading
+
+
 def speak_async(text):
+    if os.getenv("RENDER") == "true":
+        return  # Skip TTS on Render
+    import threading, pyttsx3
     def run():
         engine = pyttsx3.init()
         engine.say(text)
@@ -136,15 +141,16 @@ def process_command(text):
 
     # --- Greetings ---
     greetings = ["hi", "hello", "hey", "good morning", "good afternoon", "good evening"]
-    if any(greet in text_lower for greet in greetings):
-        responses = [
-            "Hello! How can I assist you today?",
-            "Hi there! What can I do for you?",
-            "Hey! How’s your day going?",
-            "Good to see you! How can I help?",
-        ]
-        import random
-        return random.choice(responses)
+    if any(re.search(rf'\b{greet}\b', text_lower) for greet in greetings):
+      responses = [
+        "Hello! How can I assist you today?",
+        "Hi there! What can I do for you?",
+        "Hey! How’s your day going?",
+        "Good to see you! How can I help?",
+      ]
+      import random
+      return random.choice(responses)
+
 
     # --- Time ---
     if "time" in text_lower:

@@ -1,193 +1,236 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Personal Assistant</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Personal Assistant 🤖</title>
+
+  <!-- Icon -->
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/4712/4712100.png" type="image/png" />
+
   <style>
-    /* --- Reset & Body --- */
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    /* RESET */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(-45deg, #e3f2fd, #bbdefb, #90caf9, #64b5f6);
-      background-size: 400% 400%;
-      animation: gradientBG 15s ease infinite;
+      font-family: 'Poppins', 'Segoe UI', sans-serif;
+      background: radial-gradient(circle at top left, #0a0f1f, #081426, #0f1f3a);
+      color: #e0e0e0;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
-      min-height: 100vh;
+      justify-content: center;
+      overflow: hidden;
       padding: 20px;
     }
 
-    @keyframes gradientBG {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-
-    h2 {
+    h1 {
+      color: #00eaff;
+      font-size: 2rem;
       margin-bottom: 20px;
-      color: #222;
-      font-weight: 600;
-      text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+      text-align: center;
+      letter-spacing: 1px;
+      text-shadow: 0 0 12px #00eaff, 0 0 24px #00eaff88;
+      animation: float 3s ease-in-out infinite;
     }
 
-    /* --- Chat Container --- */
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+
+    /* CHAT CONTAINER */
     #chatbox {
       width: 100%;
-      max-width: 700px;
+      max-width: 800px;
       height: 500px;
-      background: rgba(255, 255, 255, 0.9);
-      border-radius: 20px;
-      padding: 20px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 18px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 0 30px rgba(0, 255, 255, 0.1);
       overflow-y: auto;
-      margin-bottom: 15px;
+      padding: 20px;
       display: flex;
       flex-direction: column;
+      border: 1px solid rgba(0,255,255,0.2);
     }
 
-    /* Scrollbar styling */
-    #chatbox::-webkit-scrollbar {
-      width: 6px;
-    }
+    #chatbox::-webkit-scrollbar { width: 8px; }
     #chatbox::-webkit-scrollbar-thumb {
-      background: #90caf9;
+      background: rgba(0, 238, 255, 0.3);
       border-radius: 10px;
     }
 
     .message {
-      padding: 12px 16px;
+      padding: 12px 18px;
       margin: 8px 0;
       border-radius: 18px;
-      max-width: 70%;
+      max-width: 75%;
       word-wrap: break-word;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      opacity: 0;
-      transform: translateY(15px);
-      animation: fadeInUp 0.4s ease forwards;
+      line-height: 1.5;
+      animation: fadeIn 0.4s ease forwards;
+      transform-origin: bottom;
     }
 
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(15px); }
-      to { opacity: 1; transform: translateY(0); }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
     .user {
-      background: linear-gradient(135deg, #64b5f6, #42a5f5);
-      color: white;
       align-self: flex-end;
-      text-align: right;
+      background: linear-gradient(135deg, #00c6ff, #0072ff);
+      color: #fff;
       border-bottom-right-radius: 4px;
+      box-shadow: 0 0 12px rgba(0, 174, 255, 0.5);
     }
 
     .assistant {
-      background: #f1f3f4;
-      color: #222;
       align-self: flex-start;
-      text-align: left;
-      border-bottom-left-radius: 4px;
+      background: rgba(0, 255, 255, 0.1);
+      border-left: 3px solid #00eaff;
+      color: #b3f5ff;
+      box-shadow: 0 0 8px rgba(0,255,255,0.2);
     }
 
-    /* Typing indicator */
+    /* Typing Animation */
     .typing {
-      display: inline-block;
-      background: #f1f3f4;
-      padding: 10px 15px;
-      border-radius: 15px;
-      margin: 8px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
       align-self: flex-start;
+      padding: 10px 14px;
+      border-radius: 14px;
+      border-left: 3px solid #00eaff;
+      background: rgba(255,255,255,0.05);
+      margin: 8px 0;
     }
+
     .typing span {
-      height: 8px;
       width: 8px;
-      background: #999;
-      display: inline-block;
+      height: 8px;
       border-radius: 50%;
-      margin: 0 2px;
+      background: #00eaff;
       animation: blink 1.4s infinite both;
     }
+
     .typing span:nth-child(2) { animation-delay: 0.2s; }
     .typing span:nth-child(3) { animation-delay: 0.4s; }
 
     @keyframes blink {
-      0%, 80%, 100% { opacity: 0; }
+      0%, 80%, 100% { opacity: 0.2; }
       40% { opacity: 1; }
     }
 
-    /* --- Input Area --- */
+    /* INPUT SECTION */
     #inputArea {
       width: 100%;
-      max-width: 700px;
+      max-width: 800px;
+      margin-top: 18px;
       display: flex;
-      gap: 10px;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 14px;
+      padding: 10px 15px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 0 15px rgba(0, 255, 255, 0.1);
     }
 
     #commandInput {
       flex: 1;
-      padding: 14px 18px;
-      border-radius: 30px;
-      border: 1px solid #ccc;
+      background: transparent;
+      border: none;
+      color: #e0f7fa;
       font-size: 16px;
       outline: none;
-      transition: border 0.2s, box-shadow 0.2s;
+      padding: 10px;
     }
 
-    #commandInput:focus {
-      border-color: #42a5f5;
-      box-shadow: 0 0 8px rgba(66,165,245,0.3);
-    }
+    #commandInput::placeholder { color: #80deea; }
 
     button {
-      padding: 14px 20px;
       border: none;
-      border-radius: 50px;
-      background: linear-gradient(135deg, #42a5f5, #1e88e5);
-      color: white;
-      font-size: 16px;
       cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
+      background: linear-gradient(135deg, #00eaff, #1de9b6);
+      color: #001f2e;
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-weight: 600;
+      margin-left: 8px;
+      box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+      transition: all 0.3s ease;
     }
 
     button:hover {
-      transform: scale(1.08);
-      box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+      transform: translateY(-2px);
+      box-shadow: 0 0 25px rgba(0, 255, 255, 0.4);
     }
 
-    button:active {
-      transform: scale(0.95);
-    }
+    button:active { transform: scale(0.97); }
 
-    /* --- Responsive --- */
     @media (max-width: 768px) {
-      #chatbox {
-        height: 400px;
-      }
-      #commandInput, button {
-        font-size: 14px;
-        padding: 10px;
-      }
+      h1 { font-size: 1.6rem; }
+      #chatbox { height: 420px; }
+      #commandInput { font-size: 14px; }
+      button { padding: 10px 14px; font-size: 14px; }
+    }
+
+    /* Background floating circles for depth */
+    .bubble {
+      position: absolute;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,255,255,0.3), transparent 60%);
+      animation: floaty 12s infinite ease-in-out;
+      z-index: 0;
+    }
+    .bubble:nth-child(1) { width: 150px; height: 150px; top: 10%; left: 10%; animation-delay: 0s; }
+    .bubble:nth-child(2) { width: 200px; height: 200px; bottom: 15%; right: 15%; animation-delay: 2s; }
+    .bubble:nth-child(3) { width: 100px; height: 100px; top: 60%; left: 50%; animation-delay: 4s; }
+
+    @keyframes floaty {
+      0%, 100% { transform: translateY(0) scale(1); opacity: 0.6; }
+      50% { transform: translateY(-20px) scale(1.1); opacity: 0.9; }
     }
   </style>
 </head>
 <body>
-  <h2>🤖 AI Personal Assistant</h2>
+  <!-- Background bubbles -->
+  <div class="bubble"></div>
+  <div class="bubble"></div>
+  <div class="bubble"></div>
+
+  <h1>AI Personal Assistant 🤖</h1>
+
   <div id="chatbox"></div>
+
   <div id="inputArea">
-    <input type="text" id="commandInput" placeholder="Type your command..." />
+    <input type="text" id="commandInput" placeholder="Type a message or ask me anything..." />
     <button onclick="sendCommand()">Send</button>
     <button onclick="startListening()">🎤</button>
   </div>
 
   <script>
+    // 🗣️ Function to speak text using browser's speech synthesis
+    function speak(text) {
+      if (!('speechSynthesis' in window)) return; // not supported
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = "en-US";
+      utter.rate = 1;
+      utter.pitch = 1;
+      utter.volume = 1;
+      speechSynthesis.cancel(); // stop any ongoing speech
+      speechSynthesis.speak(utter);
+    }
+
     async function sendCommand(text = null) {
       const input = document.getElementById("commandInput");
-      const commandText = text || input.value;
+      const commandText = text || input.value.trim();
       if (!commandText) return;
 
       const chatbox = document.getElementById("chatbox");
 
-      // User message
+      // Add user message
       const userMsg = document.createElement("div");
       userMsg.className = "message user";
       userMsg.innerText = commandText;
@@ -195,48 +238,60 @@
       input.value = "";
       chatbox.scrollTop = chatbox.scrollHeight;
 
-      // Assistant typing indicator
+      // Typing indicator
       const typing = document.createElement("div");
       typing.className = "typing";
       typing.innerHTML = "<span></span><span></span><span></span>";
       chatbox.appendChild(typing);
       chatbox.scrollTop = chatbox.scrollHeight;
 
-      // Fetch response
-      const res = await fetch('/command', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ command: commandText })
-      });
-      const data = await res.json();
+      try {
+        const res = await fetch("/command", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ command: commandText }),
+        });
+        const data = await res.json();
 
-      // Remove typing indicator
-      chatbox.removeChild(typing);
+        chatbox.removeChild(typing);
 
-      // Assistant message
-      const assistantMsg = document.createElement("div");
-      assistantMsg.className = "message assistant";
-      assistantMsg.innerText = data.response;
-      chatbox.appendChild(assistantMsg);
-      chatbox.scrollTop = chatbox.scrollHeight;
+        const assistantMsg = document.createElement("div");
+        assistantMsg.className = "message assistant";
+        assistantMsg.innerText = data.response || "⚠️ No response from the assistant.";
+        chatbox.appendChild(assistantMsg);
+        chatbox.scrollTop = chatbox.scrollHeight;
+
+        // 🔊 Speak the assistant's reply
+        if (data.response) speak(data.response);
+
+      } catch (err) {
+        chatbox.removeChild(typing);
+        const errorMsg = document.createElement("div");
+        errorMsg.className = "message assistant";
+        errorMsg.innerText = "⚠️ Unable to connect to the server.";
+        chatbox.appendChild(errorMsg);
+      }
     }
 
-    // --- Voice Input ---
     function startListening() {
+      if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+        alert("Speech recognition not supported in this browser.");
+        return;
+      }
+
       const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-      recognition.lang = 'en-US';
+      recognition.lang = "en-US";
       recognition.interimResults = false;
       recognition.maxAlternatives = 1;
-
       recognition.start();
 
-      recognition.onresult = function(event) {
+      recognition.onresult = function (event) {
         const spokenText = event.results[0][0].transcript;
         sendCommand(spokenText);
       };
 
-      recognition.onerror = function(event) {
-        console.error("Error in recognition: " + event.error);
+      recognition.onerror = function (event) {
+        console.error("Speech recognition error:", event.error);
       };
     }
   </script>
