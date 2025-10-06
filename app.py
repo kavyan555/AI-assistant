@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify, render_template
 import pyttsx3
 from datetime import datetime
 import wolframalpha
-import spacy
+# import spacy
 import re
 from dotenv import load_dotenv
 import os
@@ -29,7 +29,7 @@ OPENWEATHER_KEY = os.getenv("OPENWEATHER_KEY")
 NEWS_API_KEY = os.getenv("NEWS_API_KEY")
 
 # NLP
-nlp = spacy.load("en_core_web_sm")
+# nlp = spacy.load("en_core_web_sm")
 
 # --- Core Functions ---
 def get_time():

@@ -1,7 +1,6 @@
 Flask
-pyttsx3
+# pyttsx3
 wolframalpha
-spacy
 requests
 wikipedia
 gunicorn
