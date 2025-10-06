@@ -2,3 +2,7 @@ Flask
 pyttsx3
 wolframalpha
 spacy
+requests
+wikipedia
+gunicorn
+python-dotenv
