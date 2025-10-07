@@ -1,4 +1,6 @@
 from flask import Flask, request, jsonify, render_template
+from datetime import datetime
+from zoneinfo import ZoneInfo 
 import pyttsx3
 from datetime import datetime
 import wolframalpha
@@ -34,7 +36,7 @@ NEWS_API_KEY = os.getenv("NEWS_API_KEY")
 nlp = spacy.load("en_core_web_sm")  # Load small English model
 
 def get_time():
-    now = datetime.now()
+    now = datetime.now(ZoneInfo("Asia/Kolkata"))
     return f"The current time is {now.strftime('%I:%M %p')}"
 
 def solve_math(query):
