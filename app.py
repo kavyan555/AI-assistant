@@ -1,8 +1,8 @@
 from flask import Flask, request, jsonify, render_template
 from datetime import datetime
 from zoneinfo import ZoneInfo 
+from bs4 import BeautifulSoup
 import pyttsx3
-from datetime import datetime
 import wolframalpha
 import spacy
 import re
@@ -12,7 +12,7 @@ import requests
 import wikipedia
 import threading
 
-# --- Setup ---
+#Setup 
 app = Flask(__name__)
 
 #Text-to-Speech (skip on Render) 
@@ -132,74 +132,76 @@ def search_web(query):
 # NLP Command Processor 
 def process_command(text):
     text_lower = text.lower().strip()
-    doc = nlp(text_lower)
+    commands = re.split(r'\band\b|;|,', text_lower)  # Split multiple commands
+    responses = []
 
-    # Greetings 
-    greetings = ["hi", "hello", "hey", "good morning", "good afternoon", "good evening"]
-    if any(re.search(rf'\b{greet}\b', text_lower) for greet in greetings):
-        responses = [
-            "Hello! How can I assist you today?",
-            "Hi there! What can I do for you?",
-            "Good to see you! How can I help?",
-        ]
+    for cmd in commands:
+        cmd = cmd.strip()
+        # --- Greetings ---
+        greetings = ["hi", "hello", "hey", "good morning", "good afternoon", "good evening"]
         import random
-        return random.choice(responses)
+        if any(re.search(rf'\b{greet}\b', cmd) for greet in greetings):
+            responses.append(random.choice([
+                "Hello! How can I assist you today?",
+                "Hi there! What can I do for you?",
+                "Good to see you! How can I help?",
+            ]))
+            continue
 
-    # Time 
-    if any(token.lemma_ == "time" for token in doc):
-        return get_time()
+        #  Browser Commands 
+        if "open browser" in cmd or "launch browser" in cmd:
+            if os.getenv("RENDER") == "true":
+                responses.append("Click here to open Google: https://www.google.com")
+            else:
+                import webbrowser
+                webbrowser.open("https://www.google.com")
+                responses.append("Opening your web browser.")
+            continue
 
-    #  Weather 
-    if "weather" in text_lower:
-        match = re.search(r'weather in ([a-zA-Z\s]+)', text_lower)
-        if match:
-            city = match.group(1).strip()
-            return get_weather(city)
-        # Try named entity recognition
-        for ent in doc.ents:
-            if ent.label_ == "GPE":  # Geopolitical entity
-                return get_weather(ent.text)
-        return "Please specify a city, like 'weather in Bangalore'."
+        #  Time 
+        if "time" in cmd:
+            responses.append(get_time())
+            continue
 
-    #  Math 
-    if any(word in text_lower for word in ["calculate", "solve", "what is", "compute", "evaluate"]) or re.match(r"^[0-9+\-*/(). ]+$", text_lower):
-        return solve_math(text_lower)
+        #  Weather
+        if "weather" in cmd:
+            match = re.search(r'weather in ([a-zA-Z\s]+)', cmd)
+            if match:
+                city = match.group(1).strip()
+                responses.append(get_weather(city))
+                continue
 
-    # News 
-    if "news" in text_lower:
-        match = re.search(r'news on ([a-zA-Z\s]+)', text_lower)
-        topic = match.group(1).strip() if match else "AI"
-        return get_latest_news(topic)
+        # News 
+        if "news" in cmd:
+            match = re.search(r'news on ([a-zA-Z\s]+)', cmd)
+            topic = match.group(1).strip() if match else "AI"
+            responses.append(get_latest_news(topic))
+            continue
 
-    #  Wikipedia 
-    if any(phrase in text_lower for phrase in ["who is", "what is", "tell me about"]):
-        topic = text_lower.replace("who is", "").replace("what is", "").replace("tell me about", "").strip()
-        if topic:
-            return search_wikipedia(topic)
+        #  Math 
+        if any(word in cmd for word in ["calculate", "solve", "what is", "compute", "evaluate"]) or re.match(r"^[0-9+\-*/(). ]+$", cmd):
+            responses.append(solve_math(cmd))
+            continue
 
-    #  Reminder 
-    if "remind" in text_lower:
-        return set_reminder(text)
+        #  Wikipedia 
+        if any(phrase in cmd for phrase in ["who is", "what is", "tell me about"]):
+            topic = cmd.replace("who is","").replace("what is","").replace("tell me about","").strip()
+            if topic:
+                responses.append(search_wikipedia(topic))
+                continue
 
-    # Intent recognition (via NLP)
-    intents = {
-        "weather": "weather",
-        "time": "time",
-        "math": "calculate",
-        "news": "news",
-        "remind": "remind",
-        "search": "search",
-    }
-    for token in doc:
-        if token.lemma_ in intents:
-            intent = intents[token.lemma_]
-            if intent == "search":
-                return search_web(text)
-            elif intent == "time":
-                return get_time()
+        #  Reminder 
+        if "remind" in cmd:
+            responses.append(set_reminder(cmd))
+            continue
 
-    #  Fallback
-    return "Sorry, I couldn't understand that. Could you rephrase?"
+        # Fallback 
+        responses.append("Sorry, I couldn't understand that part: " + cmd)
+
+    final_response = " ".join(responses)
+    speak_async(final_response)
+    return final_response
+
 
 # Flask Routes 
 @app.route('/')
