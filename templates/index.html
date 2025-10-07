@@ -8,6 +8,10 @@
   <!-- Icon -->
   <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/4712/4712100.png" type="image/png" />
 
+  <!-- Linkify JS -->
+  <script src="https://cdn.jsdelivr.net/npm/linkifyjs@2.1.9/dist/linkify.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/linkifyjs@2.1.9/dist/linkify-html.min.js"></script>
+
   <style>
     /* RESET */
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -40,7 +44,6 @@
       50% { transform: translateY(-5px); }
     }
 
-    /* CHAT CONTAINER */
     #chatbox {
       width: 100%;
       max-width: 800px;
@@ -94,7 +97,6 @@
       box-shadow: 0 0 8px rgba(0,255,255,0.2);
     }
 
-    /* Typing Animation */
     .typing {
       display: flex;
       align-items: center;
@@ -123,7 +125,6 @@
       40% { opacity: 1; }
     }
 
-    /* INPUT SECTION */
     #inputArea {
       width: 100%;
       max-width: 800px;
@@ -176,7 +177,6 @@
       button { padding: 10px 14px; font-size: 14px; }
     }
 
-    /* Background floating circles for depth */
     .bubble {
       position: absolute;
       border-radius: 50%;
@@ -195,7 +195,6 @@
   </style>
 </head>
 <body>
-  <!-- Background bubbles -->
   <div class="bubble"></div>
   <div class="bubble"></div>
   <div class="bubble"></div>
@@ -211,15 +210,14 @@
   </div>
 
   <script>
-    // 🗣️ Function to speak text using browser's speech synthesis
     function speak(text) {
-      if (!('speechSynthesis' in window)) return; // not supported
+      if (!('speechSynthesis' in window)) return;
       const utter = new SpeechSynthesisUtterance(text);
       utter.lang = "en-US";
       utter.rate = 1;
       utter.pitch = 1;
       utter.volume = 1;
-      speechSynthesis.cancel(); // stop any ongoing speech
+      speechSynthesis.cancel();
       speechSynthesis.speak(utter);
     }
 
@@ -230,7 +228,6 @@
 
       const chatbox = document.getElementById("chatbox");
 
-      // Add user message
       const userMsg = document.createElement("div");
       userMsg.className = "message user";
       userMsg.innerText = commandText;
@@ -238,7 +235,6 @@
       input.value = "";
       chatbox.scrollTop = chatbox.scrollHeight;
 
-      // Typing indicator
       const typing = document.createElement("div");
       typing.className = "typing";
       typing.innerHTML = "<span></span><span></span><span></span>";
@@ -252,16 +248,17 @@
           body: JSON.stringify({ command: commandText }),
         });
         const data = await res.json();
-
         chatbox.removeChild(typing);
 
         const assistantMsg = document.createElement("div");
         assistantMsg.className = "message assistant";
-        assistantMsg.innerText = data.response || "⚠️ No response from the assistant.";
+
+        // ✅ Convert URLs in response to clickable links
+        assistantMsg.innerHTML = linkifyHtml(data.response || "⚠️ No response from the assistant.", { target: "_blank" });
+
         chatbox.appendChild(assistantMsg);
         chatbox.scrollTop = chatbox.scrollHeight;
 
-        // 🔊 Speak the assistant's reply
         if (data.response) speak(data.response);
 
       } catch (err) {
