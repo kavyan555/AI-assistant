@@ -4,4 +4,6 @@ wolframalpha
 requests
 wikipedia
 gunicorn
+spacy
 python-dotenv
+beautifulsoup4
