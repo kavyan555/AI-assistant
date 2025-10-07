@@ -128,8 +128,12 @@ def search_web(query):
         return snippet.get_text() if snippet else "No relevant info found."
     except Exception as e:
         return "Error fetching search results."
-    
-# NLP Command Processor 
+
+def linkify(text):
+    url_regex = r'(https?://[^\s]+)'
+    return re.sub(url_regex, r'<a href="\1" target="_blank">\1</a>', text)
+
+# NLP Command Processor
 def process_command(text):
     text_lower = text.lower().strip()
     commands = re.split(r'\band\b|;', text_lower)  # Split multiple commands
@@ -137,7 +141,7 @@ def process_command(text):
 
     for cmd in commands:
         cmd = cmd.strip()
-        # --- Greetings ---
+        #Greetings 
         greetings = ["hi", "hello", "hey", "good morning", "good afternoon", "good evening"]
         import random
         if any(re.search(rf'\b{greet}\b', cmd) for greet in greetings):
@@ -151,7 +155,7 @@ def process_command(text):
         #  Browser Commands 
         if "open browser" in cmd or "launch browser" in cmd:
             if os.getenv("RENDER") == "true":
-                responses.append("Click here to open Google: https://www.google.com")
+                responses.append('Click here to open Google: <a href="https://www.google.com" target="_blank">Google</a>')
             else:
                 import webbrowser
                 webbrowser.open("https://www.google.com")
@@ -200,7 +204,7 @@ def process_command(text):
 
     final_response = " ".join(responses)
     speak_async(final_response)
-    return final_response
+    return linkify(final_response)
 
 
 # Flask Routes 
