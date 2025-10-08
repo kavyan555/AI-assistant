@@ -150,23 +150,26 @@
           assistantMsg.className =
             "self-start bg-cyan-400/10 border-l-4 border-cyan-400 text-cyan-100 px-4 py-2 rounded-2xl mb-2 max-w-[75%] shadow-md shadow-cyan-500/20";
 
-          // 🧠 Smart replacement: only show label text, make it clickable
           let responseText = data.response || "⚠️ No response from the assistant.";
 
-          // Matches: Click here to open Google:https://www.google.com
+          // ✅ Clean clickable label + hidden link handling
+          // Example: "Click here to open Google:https://www.google.com"
           responseText = responseText.replace(
-            /([^:]+):\s*(https?:\/\/\S+)/gi,
+            /(Click here[^:]*):\s*(https?:\/\/[^\s]+)/gi,
             (match, label, url) =>
               `<a href="${url}" target="_blank" class="text-cyan-300 underline hover:text-cyan-200 transition">${label.trim()}</a>`
           );
 
-          // Also handle Markdown-style links
+          // ✅ Markdown-style links [text](url)
           responseText = responseText.replace(
             /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
             `<a href="$2" target="_blank" class="text-cyan-300 underline hover:text-cyan-200 transition">$1</a>`
           );
 
-          assistantMsg.innerHTML = responseText;
+          // ✅ Convert other URLs automatically if any remain
+          const linkedHtml = linkifyHtml(responseText, { target: "_blank" });
+          assistantMsg.innerHTML = linkedHtml;
+
           chatbox.appendChild(assistantMsg);
           chatbox.scrollTop = chatbox.scrollHeight;
 
