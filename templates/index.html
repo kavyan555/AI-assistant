@@ -15,7 +15,7 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Linkify JS -->
+    <!-- Linkify JS (not used for replacements now, kept for compatibility) -->
     <script src="https://cdn.jsdelivr.net/npm/linkifyjs@2.1.9/dist/linkify.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/linkifyjs@2.1.9/dist/linkify-html.min.js"></script>
 
@@ -100,6 +100,26 @@
     </div>
 
     <script>
+      // ---------- small helpers ----------
+      function escapeHtml(str) {
+        if (!str) return "";
+        return str
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+      function escapeAttr(str) {
+        if (!str) return "";
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/"/g, "&quot;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+
+      // Speech synthesis stays same
       function speak(text) {
         if (!("speechSynthesis" in window)) return;
         const utter = new SpeechSynthesisUtterance(text);
@@ -111,6 +131,7 @@
         speechSynthesis.speak(utter);
       }
 
+      // ---------- improved sendCommand ----------
       async function sendCommand(text = null) {
         const input = document.getElementById("commandInput");
         const commandText = text || input.value.trim();
@@ -145,37 +166,65 @@
           const data = await res.json();
           chatbox.removeChild(typing);
 
-          // Assistant message
           const assistantMsg = document.createElement("div");
           assistantMsg.className =
             "self-start bg-cyan-400/10 border-l-4 border-cyan-400 text-cyan-100 px-4 py-2 rounded-2xl mb-2 max-w-[75%] shadow-md shadow-cyan-500/20";
 
-          let responseText = data.response || "⚠️ No response from the assistant.";
+          // raw text from backend
+          const raw = data.response || "⚠️ No response from the assistant.";
 
-          // ✅ Clean clickable label + hidden link handling
-          // Example: "Click here to open Google:https://www.google.com"
-          responseText = responseText.replace(
-            /(Click here[^:]*):\s*(https?:\/\/[^\s]+)/gi,
-            (match, label, url) =>
-              `<a href="${url}" target="_blank" class="text-cyan-300 underline hover:text-cyan-200 transition">${label.trim()}</a>`
+          // We'll replace label+url and markdown links with placeholders,
+          // then escape the remainder and replace placeholders with safe anchors.
+          const placeholders = [];
+
+          // 1) label:url patterns (handles no-space or with space and optional quotes)
+          //    e.g. "Click here to open Google:https://www.google.com"
+          //    also handles "Label: 'https://...'" or 'Label: "https://..."'
+          let processed = raw.replace(
+            /([^\n:]{1,200}?)\s*[:\-\—]\s*(["']?)(https?:\/\/[^\s"'<)]+)\2/gi,
+            function (match, label, q, url) {
+              const idx = placeholders.push({ label: label.trim(), url }) - 1;
+              return `__LINK_PLACEHOLDER_${idx}__`;
+            }
           );
 
-          // ✅ Markdown-style links [text](url)
-          responseText = responseText.replace(
-            /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
-            `<a href="$2" target="_blank" class="text-cyan-300 underline hover:text-cyan-200 transition">$1</a>`
+          // 2) markdown-style links [text](url)
+          processed = processed.replace(
+            /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/gi,
+            function (match, label, url) {
+              const idx = placeholders.push({ label: label.trim(), url }) - 1;
+              return `__LINK_PLACEHOLDER_${idx}__`;
+            }
           );
 
-          // ✅ Convert other URLs automatically if any remain
-          const linkedHtml = linkifyHtml(responseText, { target: "_blank" });
-          assistantMsg.innerHTML = linkedHtml;
+          // 3) escape the rest of the content to prevent XSS
+          let escaped = escapeHtml(processed);
 
+          // 4) restore placeholders with safe anchors
+          for (let i = 0; i < placeholders.length; i++) {
+            const p = placeholders[i];
+            const safeLabel = escapeHtml(p.label);
+            const safeUrlAttr = escapeAttr(p.url);
+            const anchor = `<a href="${safeUrlAttr}" target="_blank" rel="noopener noreferrer" class="text-cyan-300 underline hover:text-cyan-200 transition">${safeLabel}</a>`;
+            escaped = escaped.replace(`__LINK_PLACEHOLDER_${i}__`, anchor);
+          }
+
+          // 5) auto-link any remaining plain URLs (escaped text still contains plain http(s) strings)
+          //    This will show the URL text as link (if backend left a plain URL)
+          escaped = escaped.replace(/(^|\s)(https?:\/\/[^\s<]+)/gi, function (m, pre, url) {
+            const safeUrlAttr = escapeAttr(url);
+            const safeUrlText = escapeHtml(url);
+            return `${pre}<a href="${safeUrlAttr}" target="_blank" rel="noopener noreferrer" class="text-cyan-300 underline hover:text-cyan-200 transition">${safeUrlText}</a>`;
+          });
+
+          assistantMsg.innerHTML = escaped;
           chatbox.appendChild(assistantMsg);
           chatbox.scrollTop = chatbox.scrollHeight;
 
           if (data.response) speak(data.response);
         } catch (err) {
-          chatbox.removeChild(typing);
+          // remove typing indicator (if present) and show error
+          try { chatbox.removeChild(typing); } catch (e) {}
           const errorMsg = document.createElement("div");
           errorMsg.className =
             "self-start bg-cyan-400/10 border-l-4 border-cyan-400 text-red-300 px-4 py-2 rounded-2xl mb-2 max-w-[75%]";
@@ -184,6 +233,7 @@
         }
       }
 
+      // Speech recognition
       function startListening() {
         if (!("webkitSpeechRecognition" in window || "SpeechRecognition" in window)) {
           alert("Speech recognition not supported in this browser.");
