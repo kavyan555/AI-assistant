@@ -1,261 +1,123 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AI Personal Assistant 🤖</title>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Personal Assistant 🤖</title>
 
-    <!-- Favicon -->
-    <link
-      rel="icon"
-      href="https://cdn-icons-png.flaticon.com/512/4712/4712100.png"
-      type="image/png"
-    />
+  <!-- Favicon -->
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/4712/4712100.png" type="image/png" />
 
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Linkify JS (not used for replacements now, kept for compatibility) -->
-    <script src="https://cdn.jsdelivr.net/npm/linkifyjs@2.1.9/dist/linkify.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/linkifyjs@2.1.9/dist/linkify-html.min.js"></script>
+  <style>
+    @keyframes float {0%,100%{transform:translateY(0);}50%{transform:translateY(-5px);}}
+    @keyframes blink {0%,80%,100%{opacity:0.2;}40%{opacity:1;}}
+    .typing span {animation: blink 1.4s infinite both;}
+    .bubble {position:absolute;border-radius:50%;background:radial-gradient(circle, rgba(0,255,255,0.3), transparent 60%);animation: floaty 12s infinite ease-in-out; z-index:0;}
+    .bubble:nth-child(1){width:150px;height:150px;top:10%;left:10%;animation-delay:0s;}
+    .bubble:nth-child(2){width:200px;height:200px;bottom:15%;right:15%;animation-delay:2s;}
+    .bubble:nth-child(3){width:100px;height:100px;top:60%;left:50%;animation-delay:4s;}
+    @keyframes floaty {0%,100%{transform:translateY(0) scale(1);opacity:0.6;}50%{transform:translateY(-20px) scale(1.1);opacity:0.9;}}
+  </style>
+</head>
+<body class="font-[Poppins] bg-gradient-to-br from-[#0a0f1f] via-[#081426] to-[#0f1f3a] text-gray-200 min-h-screen flex flex-col items-center justify-center relative overflow-hidden p-5">
 
-    <style>
-      @keyframes float {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-5px); }
-      }
+  <!-- Floating background bubbles -->
+  <div class="bubble"></div>
+  <div class="bubble"></div>
+  <div class="bubble"></div>
 
-      @keyframes blink {
-        0%, 80%, 100% { opacity: 0.2; }
-        40% { opacity: 1; }
-      }
+  <!-- Title -->
+  <h1 class="text-[#00eaff] text-3xl sm:text-4xl mb-6 text-center tracking-wide drop-shadow-[0_0_12px_#00eaff] animate-[float_3s_ease-in-out_infinite]">
+    AI Personal Assistant 🤖
+  </h1>
 
-      .typing span {
-        animation: blink 1.4s infinite both;
-      }
+  <!-- Chat Container -->
+  <div id="chatbox" class="w-full max-w-3xl h-[500px] bg-white/5 border border-cyan-400/20 rounded-2xl backdrop-blur-md shadow-lg shadow-cyan-500/10 overflow-y-auto flex flex-col p-5"></div>
 
-      .bubble {
-        position: absolute;
-        border-radius: 50%;
-        background: radial-gradient(circle, rgba(0,255,255,0.3), transparent 60%);
-        animation: floaty 12s infinite ease-in-out;
-        z-index: 0;
-      }
+  <!-- Input Area -->
+  <div id="inputArea" class="w-full max-w-3xl mt-4 flex items-center bg-white/5 rounded-xl p-3 backdrop-blur-md border border-cyan-400/10 shadow-md shadow-cyan-500/10">
+    <input id="commandInput" type="text" placeholder="Type a message or ask me anything..."
+      class="flex-1 bg-transparent border-none text-cyan-100 placeholder:text-cyan-400/60 text-base focus:outline-none p-2" />
+    <button onclick="sendCommand()" class="ml-2 bg-gradient-to-r from-cyan-400 to-emerald-400 text-[#001f2e] px-4 py-2 rounded-lg font-semibold hover:shadow-lg hover:scale-[1.02] transition-all duration-200">Send</button>
+    <button onclick="startListening()" class="ml-2 bg-gradient-to-r from-cyan-400 to-emerald-400 text-[#001f2e] px-3 py-2 rounded-lg font-semibold hover:shadow-lg hover:scale-[1.02] transition-all duration-200">🎤</button>
+  </div>
 
-      .bubble:nth-child(1) { width: 150px; height: 150px; top: 10%; left: 10%; animation-delay: 0s; }
-      .bubble:nth-child(2) { width: 200px; height: 200px; bottom: 15%; right: 15%; animation-delay: 2s; }
-      .bubble:nth-child(3) { width: 100px; height: 100px; top: 60%; left: 50%; animation-delay: 4s; }
+<script>
+  // ---------- helpers ----------
+  function escapeHtml(str){return str?str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;"):"";}
+  function escapeAttr(str){return str?String(str).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;"):"";}
 
-      @keyframes floaty {
-        0%, 100% { transform: translateY(0) scale(1); opacity: 0.6; }
-        50% { transform: translateY(-20px) scale(1.1); opacity: 0.9; }
-      }
-    </style>
-  </head>
+  function speak(text){
+    if(!("speechSynthesis" in window)) return;
+    const utter=new SpeechSynthesisUtterance(text);
+    utter.lang="en-US";utter.rate=1;utter.pitch=1;utter.volume=1;
+    speechSynthesis.cancel();speechSynthesis.speak(utter);
+  }
 
-  <body
-    class="font-[Poppins] bg-gradient-to-br from-[#0a0f1f] via-[#081426] to-[#0f1f3a] text-gray-200 min-h-screen flex flex-col items-center justify-center relative overflow-hidden p-5"
-  >
-    <!-- Floating background bubbles -->
-    <div class="bubble"></div>
-    <div class="bubble"></div>
-    <div class="bubble"></div>
+  // ---------- main sendCommand ----------
+  async function sendCommand(text=null){
+    const input=document.getElementById("commandInput");
+    const commandText=text||input.value.trim();
+    if(!commandText) return;
+    const chatbox=document.getElementById("chatbox");
 
-    <!-- Title -->
-    <h1
-      class="text-[#00eaff] text-3xl sm:text-4xl mb-6 text-center tracking-wide drop-shadow-[0_0_12px_#00eaff] animate-[float_3s_ease-in-out_infinite]"
-    >
-      AI Personal Assistant 🤖
-    </h1>
+    // User message
+    const userMsg=document.createElement("div");
+    userMsg.className="self-end bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-4 py-2 rounded-2xl mb-2 max-w-[75%] shadow-md shadow-cyan-500/30";
+    userMsg.innerText=commandText;
+    chatbox.appendChild(userMsg);
+    input.value="";chatbox.scrollTop=chatbox.scrollHeight;
 
-    <!-- Chat Container -->
-    <div
-      id="chatbox"
-      class="w-full max-w-3xl h-[500px] bg-white/5 border border-cyan-400/20 rounded-2xl backdrop-blur-md shadow-lg shadow-cyan-500/10 overflow-y-auto flex flex-col p-5"
-    ></div>
+    // Typing indicator
+    const typing=document.createElement("div");
+    typing.className="typing flex items-center gap-2 self-start bg-white/10 border-l-4 border-cyan-400 px-3 py-2 rounded-lg mt-2";
+    typing.innerHTML="<span class='w-2 h-2 rounded-full bg-cyan-400'></span><span class='w-2 h-2 rounded-full bg-cyan-400'></span><span class='w-2 h-2 rounded-full bg-cyan-400'></span>";
+    chatbox.appendChild(typing);
+    chatbox.scrollTop=chatbox.scrollHeight;
 
-    <!-- Input Area -->
-    <div
-      id="inputArea"
-      class="w-full max-w-3xl mt-4 flex items-center bg-white/5 rounded-xl p-3 backdrop-blur-md border border-cyan-400/10 shadow-md shadow-cyan-500/10"
-    >
-      <input
-        id="commandInput"
-        type="text"
-        placeholder="Type a message or ask me anything..."
-        class="flex-1 bg-transparent border-none text-cyan-100 placeholder:text-cyan-400/60 text-base focus:outline-none p-2"
-      />
-      <button
-        onclick="sendCommand()"
-        class="ml-2 bg-gradient-to-r from-cyan-400 to-emerald-400 text-[#001f2e] px-4 py-2 rounded-lg font-semibold hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
-      >
-        Send
-      </button>
-      <button
-        onclick="startListening()"
-        class="ml-2 bg-gradient-to-r from-cyan-400 to-emerald-400 text-[#001f2e] px-3 py-2 rounded-lg font-semibold hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
-      >
-        🎤
-      </button>
-    </div>
+    try{
+      const res=await fetch("/command", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({command:commandText})});
+      const data=await res.json();
+      chatbox.removeChild(typing);
 
-    <script>
-      // ---------- small helpers ----------
-      function escapeHtml(str) {
-        if (!str) return "";
-        return str
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;")
-          .replace(/'/g, "&#39;");
-      }
-      function escapeAttr(str) {
-        if (!str) return "";
-        return String(str)
-          .replace(/&/g, "&amp;")
-          .replace(/"/g, "&quot;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;");
-      }
+      const assistantMsg=document.createElement("div");
+      assistantMsg.className="self-start bg-cyan-400/10 border-l-4 border-cyan-400 text-cyan-100 px-4 py-2 rounded-2xl mb-2 max-w-[75%] shadow-md shadow-cyan-500/20";
 
-      // Speech synthesis stays same
-      function speak(text) {
-        if (!("speechSynthesis" in window)) return;
-        const utter = new SpeechSynthesisUtterance(text);
-        utter.lang = "en-US";
-        utter.rate = 1;
-        utter.pitch = 1;
-        utter.volume = 1;
-        speechSynthesis.cancel();
-        speechSynthesis.speak(utter);
-      }
+      let raw=data.response||"⚠️ No response from the assistant.";
 
-      // ---------- improved sendCommand ----------
-      async function sendCommand(text = null) {
-        const input = document.getElementById("commandInput");
-        const commandText = text || input.value.trim();
-        if (!commandText) return;
+      // Convert [link:URL] patterns to clickable links with safe label
+      let html=escapeHtml(raw).replace(/\[link:(https?:\/\/[^\]]+)\]/gi, function(m,url){
+        return `<a href="${escapeAttr(url)}" target="_blank" rel="noopener noreferrer" class="text-cyan-300 underline hover:text-cyan-200 transition">Click here</a>`;
+      });
 
-        const chatbox = document.getElementById("chatbox");
+      assistantMsg.innerHTML=html;
+      chatbox.appendChild(assistantMsg);
+      chatbox.scrollTop=chatbox.scrollHeight;
 
-        // User message
-        const userMsg = document.createElement("div");
-        userMsg.className =
-          "self-end bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-4 py-2 rounded-2xl mb-2 max-w-[75%] shadow-md shadow-cyan-500/30";
-        userMsg.innerText = commandText;
-        chatbox.appendChild(userMsg);
-        input.value = "";
-        chatbox.scrollTop = chatbox.scrollHeight;
+      if(data.response) speak(data.response);
 
-        // Typing indicator
-        const typing = document.createElement("div");
-        typing.className =
-          "typing flex items-center gap-2 self-start bg-white/10 border-l-4 border-cyan-400 px-3 py-2 rounded-lg mt-2";
-        typing.innerHTML =
-          "<span class='w-2 h-2 rounded-full bg-cyan-400'></span><span class='w-2 h-2 rounded-full bg-cyan-400'></span><span class='w-2 h-2 rounded-full bg-cyan-400'></span>";
-        chatbox.appendChild(typing);
-        chatbox.scrollTop = chatbox.scrollHeight;
+    }catch(err){
+      try{chatbox.removeChild(typing);}catch(e){}
+      const errorMsg=document.createElement("div");
+      errorMsg.className="self-start bg-cyan-400/10 border-l-4 border-cyan-400 text-red-300 px-4 py-2 rounded-2xl mb-2 max-w-[75%]";
+      errorMsg.innerText="⚠️ Unable to connect to the server.";
+      chatbox.appendChild(errorMsg);
+    }
+  }
 
-        try {
-          const res = await fetch("/command", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ command: commandText }),
-          });
-          const data = await res.json();
-          chatbox.removeChild(typing);
+  // ---------- speech recognition ----------
+  function startListening(){
+    if(!("webkitSpeechRecognition" in window || "SpeechRecognition" in window)){alert("Speech recognition not supported in this browser.");return;}
+    const recognition=new (window.SpeechRecognition||window.webkitSpeechRecognition)();
+    recognition.lang="en-US";recognition.interimResults=false;recognition.maxAlternatives=1;
+    recognition.start();
+    recognition.onresult=function(event){const spokenText=event.results[0][0].transcript;sendCommand(spokenText);}
+    recognition.onerror=function(event){console.error("Speech recognition error:", event.error);}
+  }
 
-          const assistantMsg = document.createElement("div");
-          assistantMsg.className =
-            "self-start bg-cyan-400/10 border-l-4 border-cyan-400 text-cyan-100 px-4 py-2 rounded-2xl mb-2 max-w-[75%] shadow-md shadow-cyan-500/20";
-
-          // raw text from backend
-          const raw = data.response || "⚠️ No response from the assistant.";
-
-          // We'll replace label+url and markdown links with placeholders,
-          // then escape the remainder and replace placeholders with safe anchors.
-          const placeholders = [];
-
-          // 1) label:url patterns (handles no-space or with space and optional quotes)
-          //    e.g. "Click here to open Google:https://www.google.com"
-          //    also handles "Label: 'https://...'" or 'Label: "https://..."'
-          let processed = raw.replace(
-            /([^\n:]{1,200}?)\s*[:\-\—]\s*(["']?)(https?:\/\/[^\s"'<)]+)\2/gi,
-            function (match, label, q, url) {
-              const idx = placeholders.push({ label: label.trim(), url }) - 1;
-              return `__LINK_PLACEHOLDER_${idx}__`;
-            }
-          );
-
-          // 2) markdown-style links [text](url)
-          processed = processed.replace(
-            /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/gi,
-            function (match, label, url) {
-              const idx = placeholders.push({ label: label.trim(), url }) - 1;
-              return `__LINK_PLACEHOLDER_${idx}__`;
-            }
-          );
-
-          // 3) escape the rest of the content to prevent XSS
-          let escaped = escapeHtml(processed);
-
-          // 4) restore placeholders with safe anchors
-          for (let i = 0; i < placeholders.length; i++) {
-            const p = placeholders[i];
-            const safeLabel = escapeHtml(p.label);
-            const safeUrlAttr = escapeAttr(p.url);
-            const anchor = `<a href="${safeUrlAttr}" target="_blank" rel="noopener noreferrer" class="text-cyan-300 underline hover:text-cyan-200 transition">${safeLabel}</a>`;
-            escaped = escaped.replace(`__LINK_PLACEHOLDER_${i}__`, anchor);
-          }
-
-          // 5) auto-link any remaining plain URLs (escaped text still contains plain http(s) strings)
-          //    This will show the URL text as link (if backend left a plain URL)
-          escaped = escaped.replace(/(^|\s)(https?:\/\/[^\s<]+)/gi, function (m, pre, url) {
-            const safeUrlAttr = escapeAttr(url);
-            const safeUrlText = escapeHtml(url);
-            return `${pre}<a href="${safeUrlAttr}" target="_blank" rel="noopener noreferrer" class="text-cyan-300 underline hover:text-cyan-200 transition">${safeUrlText}</a>`;
-          });
-
-          assistantMsg.innerHTML = escaped;
-          chatbox.appendChild(assistantMsg);
-          chatbox.scrollTop = chatbox.scrollHeight;
-
-          if (data.response) speak(data.response);
-        } catch (err) {
-          // remove typing indicator (if present) and show error
-          try { chatbox.removeChild(typing); } catch (e) {}
-          const errorMsg = document.createElement("div");
-          errorMsg.className =
-            "self-start bg-cyan-400/10 border-l-4 border-cyan-400 text-red-300 px-4 py-2 rounded-2xl mb-2 max-w-[75%]";
-          errorMsg.innerText = "⚠️ Unable to connect to the server.";
-          chatbox.appendChild(errorMsg);
-        }
-      }
-
-      // Speech recognition
-      function startListening() {
-        if (!("webkitSpeechRecognition" in window || "SpeechRecognition" in window)) {
-          alert("Speech recognition not supported in this browser.");
-          return;
-        }
-
-        const recognition = new (window.SpeechRecognition ||
-          window.webkitSpeechRecognition)();
-        recognition.lang = "en-US";
-        recognition.interimResults = false;
-        recognition.maxAlternatives = 1;
-        recognition.start();
-
-        recognition.onresult = function (event) {
-          const spokenText = event.results[0][0].transcript;
-          sendCommand(spokenText);
-        };
-
-        recognition.onerror = function (event) {
-          console.error("Speech recognition error:", event.error);
-        };
-      }
-    </script>
-  </body>
+</script>
+</body>
 </html>

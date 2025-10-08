@@ -155,7 +155,7 @@ def process_command(text):
         #  Browser Commands 
         if "open browser" in cmd or "launch browser" in cmd:
             if os.getenv("RENDER") == "true":
-                responses.append("Click here to open Google:https://www.google.com")
+                responses.append("Click here to open Google[link:https://www.google.com]")
             else:
                 import webbrowser
                 webbrowser.open("https://www.google.com")
