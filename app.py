@@ -203,7 +203,7 @@ def process_command(text):
         responses.append("I couldn't understand that part: " + cmd)
 
     final_response = " ".join(responses)
-    speak_async(final_response)
+    # speak_async(final_response)
     final_response = linkify(final_response)
     return final_response
 

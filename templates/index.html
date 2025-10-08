@@ -1,296 +1,211 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI Personal Assistant 🤖</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Personal Assistant 🤖</title>
 
-  <!-- Icon -->
-  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/4712/4712100.png" type="image/png" />
+    <!-- Favicon -->
+    <link
+      rel="icon"
+      href="https://cdn-icons-png.flaticon.com/512/4712/4712100.png"
+      type="image/png"
+    />
 
-  <!-- Linkify JS -->
-  <script src="https://cdn.jsdelivr.net/npm/linkifyjs@2.1.9/dist/linkify.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/linkifyjs@2.1.9/dist/linkify-html.min.js"></script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
 
-  <style>
-    /* RESET */
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    <!-- Linkify JS -->
+    <script src="https://cdn.jsdelivr.net/npm/linkifyjs@2.1.9/dist/linkify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/linkifyjs@2.1.9/dist/linkify-html.min.js"></script>
 
-    body {
-      font-family: 'Poppins', 'Segoe UI', sans-serif;
-      background: radial-gradient(circle at top left, #0a0f1f, #081426, #0f1f3a);
-      color: #e0e0e0;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      padding: 20px;
-    }
+    <style>
+      @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-5px); }
+      }
 
-    h1 {
-      color: #00eaff;
-      font-size: 2rem;
-      margin-bottom: 20px;
-      text-align: center;
-      letter-spacing: 1px;
-      text-shadow: 0 0 12px #00eaff, 0 0 24px #00eaff88;
-      animation: float 3s ease-in-out infinite;
-    }
+      @keyframes blink {
+        0%, 80%, 100% { opacity: 0.2; }
+        40% { opacity: 1; }
+      }
 
-    @keyframes float {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-5px); }
-    }
+      .typing span {
+        animation: blink 1.4s infinite both;
+      }
 
-    #chatbox {
-      width: 100%;
-      max-width: 800px;
-      height: 500px;
-      background: rgba(255, 255, 255, 0.06);
-      border-radius: 18px;
-      backdrop-filter: blur(12px);
-      box-shadow: 0 0 30px rgba(0, 255, 255, 0.1);
-      overflow-y: auto;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      border: 1px solid rgba(0,255,255,0.2);
-    }
+      .bubble {
+        position: absolute;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(0,255,255,0.3), transparent 60%);
+        animation: floaty 12s infinite ease-in-out;
+        z-index: 0;
+      }
 
-    #chatbox::-webkit-scrollbar { width: 8px; }
-    #chatbox::-webkit-scrollbar-thumb {
-      background: rgba(0, 238, 255, 0.3);
-      border-radius: 10px;
-    }
+      .bubble:nth-child(1) { width: 150px; height: 150px; top: 10%; left: 10%; animation-delay: 0s; }
+      .bubble:nth-child(2) { width: 200px; height: 200px; bottom: 15%; right: 15%; animation-delay: 2s; }
+      .bubble:nth-child(3) { width: 100px; height: 100px; top: 60%; left: 50%; animation-delay: 4s; }
 
-    .message {
-      padding: 12px 18px;
-      margin: 8px 0;
-      border-radius: 18px;
-      max-width: 75%;
-      word-wrap: break-word;
-      line-height: 1.5;
-      animation: fadeIn 0.4s ease forwards;
-      transform-origin: bottom;
-    }
+      @keyframes floaty {
+        0%, 100% { transform: translateY(0) scale(1); opacity: 0.6; }
+        50% { transform: translateY(-20px) scale(1.1); opacity: 0.9; }
+      }
+    </style>
+  </head>
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px) scale(0.98); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
-    }
+  <body
+    class="font-[Poppins] bg-gradient-to-br from-[#0a0f1f] via-[#081426] to-[#0f1f3a] text-gray-200 min-h-screen flex flex-col items-center justify-center relative overflow-hidden p-5"
+  >
+    <!-- Floating background bubbles -->
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
 
-    .user {
-      align-self: flex-end;
-      background: linear-gradient(135deg, #00c6ff, #0072ff);
-      color: #fff;
-      border-bottom-right-radius: 4px;
-      box-shadow: 0 0 12px rgba(0, 174, 255, 0.5);
-    }
+    <!-- Title -->
+    <h1
+      class="text-[#00eaff] text-3xl sm:text-4xl mb-6 text-center tracking-wide drop-shadow-[0_0_12px_#00eaff] animate-[float_3s_ease-in-out_infinite]"
+    >
+      AI Personal Assistant 🤖
+    </h1>
 
-    .assistant {
-      align-self: flex-start;
-      background: rgba(0, 255, 255, 0.1);
-      border-left: 3px solid #00eaff;
-      color: #b3f5ff;
-      box-shadow: 0 0 8px rgba(0,255,255,0.2);
-    }
+    <!-- Chat Container -->
+    <div
+      id="chatbox"
+      class="w-full max-w-3xl h-[500px] bg-white/5 border border-cyan-400/20 rounded-2xl backdrop-blur-md shadow-lg shadow-cyan-500/10 overflow-y-auto flex flex-col p-5"
+    ></div>
 
-    .typing {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      align-self: flex-start;
-      padding: 10px 14px;
-      border-radius: 14px;
-      border-left: 3px solid #00eaff;
-      background: rgba(255,255,255,0.05);
-      margin: 8px 0;
-    }
+    <!-- Input Area -->
+    <div
+      id="inputArea"
+      class="w-full max-w-3xl mt-4 flex items-center bg-white/5 rounded-xl p-3 backdrop-blur-md border border-cyan-400/10 shadow-md shadow-cyan-500/10"
+    >
+      <input
+        id="commandInput"
+        type="text"
+        placeholder="Type a message or ask me anything..."
+        class="flex-1 bg-transparent border-none text-cyan-100 placeholder:text-cyan-400/60 text-base focus:outline-none p-2"
+      />
+      <button
+        onclick="sendCommand()"
+        class="ml-2 bg-gradient-to-r from-cyan-400 to-emerald-400 text-[#001f2e] px-4 py-2 rounded-lg font-semibold hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
+      >
+        Send
+      </button>
+      <button
+        onclick="startListening()"
+        class="ml-2 bg-gradient-to-r from-cyan-400 to-emerald-400 text-[#001f2e] px-3 py-2 rounded-lg font-semibold hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
+      >
+        🎤
+      </button>
+    </div>
 
-    .typing span {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #00eaff;
-      animation: blink 1.4s infinite both;
-    }
+    <script>
+      function speak(text) {
+        if (!("speechSynthesis" in window)) return;
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = "en-US";
+        utter.rate = 1;
+        utter.pitch = 1;
+        utter.volume = 1;
+        speechSynthesis.cancel();
+        speechSynthesis.speak(utter);
+      }
 
-    .typing span:nth-child(2) { animation-delay: 0.2s; }
-    .typing span:nth-child(3) { animation-delay: 0.4s; }
+      async function sendCommand(text = null) {
+        const input = document.getElementById("commandInput");
+        const commandText = text || input.value.trim();
+        if (!commandText) return;
 
-    @keyframes blink {
-      0%, 80%, 100% { opacity: 0.2; }
-      40% { opacity: 1; }
-    }
+        const chatbox = document.getElementById("chatbox");
 
-    #inputArea {
-      width: 100%;
-      max-width: 800px;
-      margin-top: 18px;
-      display: flex;
-      align-items: center;
-      background: rgba(255, 255, 255, 0.06);
-      border-radius: 14px;
-      padding: 10px 15px;
-      backdrop-filter: blur(8px);
-      box-shadow: 0 0 15px rgba(0, 255, 255, 0.1);
-    }
-
-    #commandInput {
-      flex: 1;
-      background: transparent;
-      border: none;
-      color: #e0f7fa;
-      font-size: 16px;
-      outline: none;
-      padding: 10px;
-    }
-
-    #commandInput::placeholder { color: #80deea; }
-
-    button {
-      border: none;
-      cursor: pointer;
-      background: linear-gradient(135deg, #00eaff, #1de9b6);
-      color: #001f2e;
-      padding: 12px 18px;
-      border-radius: 10px;
-      font-weight: 600;
-      margin-left: 8px;
-      box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
-      transition: all 0.3s ease;
-    }
-
-    button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 0 25px rgba(0, 255, 255, 0.4);
-    }
-
-    button:active { transform: scale(0.97); }
-
-    @media (max-width: 768px) {
-      h1 { font-size: 1.6rem; }
-      #chatbox { height: 420px; }
-      #commandInput { font-size: 14px; }
-      button { padding: 10px 14px; font-size: 14px; }
-    }
-
-    .bubble {
-      position: absolute;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(0,255,255,0.3), transparent 60%);
-      animation: floaty 12s infinite ease-in-out;
-      z-index: 0;
-    }
-    .bubble:nth-child(1) { width: 150px; height: 150px; top: 10%; left: 10%; animation-delay: 0s; }
-    .bubble:nth-child(2) { width: 200px; height: 200px; bottom: 15%; right: 15%; animation-delay: 2s; }
-    .bubble:nth-child(3) { width: 100px; height: 100px; top: 60%; left: 50%; animation-delay: 4s; }
-
-    @keyframes floaty {
-      0%, 100% { transform: translateY(0) scale(1); opacity: 0.6; }
-      50% { transform: translateY(-20px) scale(1.1); opacity: 0.9; }
-    }
-  </style>
-</head>
-<body>
-  <div class="bubble"></div>
-  <div class="bubble"></div>
-  <div class="bubble"></div>
-
-  <h1>AI Personal Assistant 🤖</h1>
-
-  <div id="chatbox"></div>
-
-  <div id="inputArea">
-    <input type="text" id="commandInput" placeholder="Type a message or ask me anything..." />
-    <button onclick="sendCommand()">Send</button>
-    <button onclick="startListening()">🎤</button>
-  </div>
-
-  <script>
-    function speak(text) {
-      if (!('speechSynthesis' in window)) return;
-      const utter = new SpeechSynthesisUtterance(text);
-      utter.lang = "en-US";
-      utter.rate = 1;
-      utter.pitch = 1;
-      utter.volume = 1;
-      speechSynthesis.cancel();
-      speechSynthesis.speak(utter);
-    }
-
-    async function sendCommand(text = null) {
-      const input = document.getElementById("commandInput");
-      const commandText = text || input.value.trim();
-      if (!commandText) return;
-
-      const chatbox = document.getElementById("chatbox");
-
-      const userMsg = document.createElement("div");
-      userMsg.className = "message user";
-      userMsg.innerText = commandText;
-      chatbox.appendChild(userMsg);
-      input.value = "";
-      chatbox.scrollTop = chatbox.scrollHeight;
-
-      const typing = document.createElement("div");
-      typing.className = "typing";
-      typing.innerHTML = "<span></span><span></span><span></span>";
-      chatbox.appendChild(typing);
-      chatbox.scrollTop = chatbox.scrollHeight;
-
-      try {
-        const res = await fetch("/command", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ command: commandText }),
-        });
-        const data = await res.json();
-        chatbox.removeChild(typing);
-
-        const assistantMsg = document.createElement("div");
-        assistantMsg.className = "message assistant";
-
-        // ✅ Convert URLs in response to clickable links
-        assistantMsg.innerHTML = linkifyHtml(data.response || "⚠️ No response from the assistant.", { target: "_blank" });
-
-        chatbox.appendChild(assistantMsg);
+        // User message
+        const userMsg = document.createElement("div");
+        userMsg.className =
+          "self-end bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-4 py-2 rounded-2xl mb-2 max-w-[75%] shadow-md shadow-cyan-500/30";
+        userMsg.innerText = commandText;
+        chatbox.appendChild(userMsg);
+        input.value = "";
         chatbox.scrollTop = chatbox.scrollHeight;
 
-        if (data.response) speak(data.response);
+        // Typing indicator
+        const typing = document.createElement("div");
+        typing.className =
+          "typing flex items-center gap-2 self-start bg-white/10 border-l-4 border-cyan-400 px-3 py-2 rounded-lg mt-2";
+        typing.innerHTML =
+          "<span class='w-2 h-2 rounded-full bg-cyan-400'></span><span class='w-2 h-2 rounded-full bg-cyan-400'></span><span class='w-2 h-2 rounded-full bg-cyan-400'></span>";
+        chatbox.appendChild(typing);
+        chatbox.scrollTop = chatbox.scrollHeight;
 
-      } catch (err) {
-        chatbox.removeChild(typing);
-        const errorMsg = document.createElement("div");
-        errorMsg.className = "message assistant";
-        errorMsg.innerText = "⚠️ Unable to connect to the server.";
-        chatbox.appendChild(errorMsg);
+        try {
+          const res = await fetch("/command", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ command: commandText }),
+          });
+          const data = await res.json();
+          chatbox.removeChild(typing);
+
+          // Assistant message
+          const assistantMsg = document.createElement("div");
+          assistantMsg.className =
+            "self-start bg-cyan-400/10 border-l-4 border-cyan-400 text-cyan-100 px-4 py-2 rounded-2xl mb-2 max-w-[75%] shadow-md shadow-cyan-500/20";
+
+          // 🧠 Smart URL and text replacement
+          let responseText = data.response || "⚠️ No response from the assistant.";
+
+          // Convert text like:  Click here to open Google: "https://www.google.com"
+          responseText = responseText.replace(
+            /([^"]+):\s*"https?:\/\/([^"]+)"/gi,
+            (match, label, url) =>
+              `<a href="https://${url}" target="_blank" class="text-cyan-300 underline hover:text-cyan-200 transition">${label.trim()}</a>`
+          );
+
+          // Convert Markdown-style links [text](url)
+          responseText = responseText.replace(
+            /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+            `<a href="$2" target="_blank" class="text-cyan-300 underline hover:text-cyan-200 transition">$1</a>`
+          );
+
+          // Convert any remaining plain URLs into links
+          const linkedHtml = linkifyHtml(responseText, { target: "_blank" });
+          assistantMsg.innerHTML = linkedHtml;
+
+          chatbox.appendChild(assistantMsg);
+          chatbox.scrollTop = chatbox.scrollHeight;
+
+          if (data.response) speak(data.response);
+        } catch (err) {
+          chatbox.removeChild(typing);
+          const errorMsg = document.createElement("div");
+          errorMsg.className =
+            "self-start bg-cyan-400/10 border-l-4 border-cyan-400 text-red-300 px-4 py-2 rounded-2xl mb-2 max-w-[75%]";
+          errorMsg.innerText = "⚠️ Unable to connect to the server.";
+          chatbox.appendChild(errorMsg);
+        }
       }
-    }
 
-    function startListening() {
-      if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-        alert("Speech recognition not supported in this browser.");
-        return;
+      function startListening() {
+        if (!("webkitSpeechRecognition" in window || "SpeechRecognition" in window)) {
+          alert("Speech recognition not supported in this browser.");
+          return;
+        }
+
+        const recognition = new (window.SpeechRecognition ||
+          window.webkitSpeechRecognition)();
+        recognition.lang = "en-US";
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+        recognition.start();
+
+        recognition.onresult = function (event) {
+          const spokenText = event.results[0][0].transcript;
+          sendCommand(spokenText);
+        };
+
+        recognition.onerror = function (event) {
+          console.error("Speech recognition error:", event.error);
+        };
       }
-
-      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-      recognition.lang = "en-US";
-      recognition.interimResults = false;
-      recognition.maxAlternatives = 1;
-      recognition.start();
-
-      recognition.onresult = function (event) {
-        const spokenText = event.results[0][0].transcript;
-        sendCommand(spokenText);
-      };
-
-      recognition.onerror = function (event) {
-        console.error("Speech recognition error:", event.error);
-      };
-    }
-  </script>
-</body>
+    </script>
+  </body>
 </html>
